@@ -22,6 +22,6 @@ func Start() {
 
 	port := getPort()
 
-	fmt.Printf("Сервер запущен на http://localhost:%s ...\n", port)
+	fmt.Printf("The server is running on http://localhost:%s ...\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
