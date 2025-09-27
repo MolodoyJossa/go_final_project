@@ -95,7 +95,7 @@ func monthlyRepetition(now, date time.Time, parts []string) (string, error) {
 		}
 		year++
 		started = true
-		if year-int(date.Year()) > 5 {
+		if year-date.Year() > 5 {
 			return "", fmt.Errorf("the required date was not found for the upcoming five years")
 		}
 	}
@@ -103,6 +103,10 @@ func monthlyRepetition(now, date time.Time, parts []string) (string, error) {
 }
 
 func weeklyRepetition(now, date time.Time, parts []string) (string, error) {
+
+	if len(parts) != 2 {
+		return "", fmt.Errorf("incorrect format of the repetition rule: incorrect number of parts for weekly repetition")
+	}
 
 	var weekdays []int
 	weekdayStrs := strings.Split(parts[1], ",")
