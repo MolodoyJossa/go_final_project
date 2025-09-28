@@ -30,6 +30,9 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TasksHandler(w http.ResponseWriter, r *http.Request) {
+	search := r.FormValue("search")
+	var tasks []*db.Task
+
 	limit, err := strconv.Atoi(os.Getenv("TODO_TASKS_LIMIT"))
 	if err != nil {
 		limit = 50
@@ -40,7 +43,12 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := db.Tasks(limit)
+	if search != "" {
+		tasks, err = db.SearchTasks(search, limit)
+	} else {
+		tasks, err = db.Tasks(limit)
+	}
+
 	if err != nil {
 		log.New(w, "failed to get tasks: "+err.Error(), http.StatusInternalServerError)
 		writeJSONError(w, "Failed to get tasks: "+err.Error(), http.StatusInternalServerError)
