@@ -156,7 +156,7 @@ func dailyRepetition(now, date time.Time, parts []string) (string, error) {
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
-	date, err := time.Parse("20060102", dstart)
+	date, err := time.Parse(DateFormat, dstart)
 	if err != nil {
 		return "", fmt.Errorf("invalid date format: %w", err)
 	}

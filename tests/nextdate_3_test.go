@@ -2,6 +2,9 @@ package tests
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"testing"
@@ -9,6 +12,33 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+func getBodyWithToken(path string) ([]byte, error) {
+	client := &http.Client{}
+	if len(Token) > 0 {
+		jar, err := cookiejar.New(nil)
+		if err != nil {
+			return nil, err
+		}
+		urlObj, err := url.Parse(getURL(path))
+		if err != nil {
+			return nil, err
+		}
+		jar.SetCookies(urlObj, []*http.Cookie{
+			{
+				Name:  "token",
+				Value: Token,
+			},
+		})
+		client.Jar = jar
+	}
+	resp, err := client.Get(getURL(path))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return io.ReadAll(resp.Body)
+}
 
 type nextDate struct {
 	date   string
@@ -41,7 +71,7 @@ func TestNextDate(t *testing.T) {
 		for _, v := range tbl {
 			urlPath := fmt.Sprintf("api/nextdate?now=20240126&date=%s&repeat=%s",
 				url.QueryEscape(v.date), url.QueryEscape(v.repeat))
-			get, err := getBody(urlPath)
+			get, err := getBodyWithToken(urlPath)
 			assert.NoError(t, err)
 			next := strings.TrimSpace(string(get))
 			_, err = time.Parse("20060102", next)

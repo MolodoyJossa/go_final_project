@@ -5,8 +5,9 @@ import (
 )
 
 func Init() {
-	http.HandleFunc("/api/nextdate", NextDayHandler)
-	http.HandleFunc("/api/task", TaskHandler)
-	http.HandleFunc("/api/tasks", TasksHandler)
-	http.HandleFunc("/api/task/done", TaskDoneHandler)
+	http.HandleFunc("/api/signin", Signin)
+	http.HandleFunc("/api/nextdate", Auth(NextDayHandler))
+	http.HandleFunc("/api/task", Auth(TaskHandler))
+	http.HandleFunc("/api/tasks", Auth(TasksHandler))
+	http.HandleFunc("/api/task/done", Auth(TaskDoneHandler))
 }
