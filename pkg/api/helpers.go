@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"go_final_project-main/pkg/db"
 	"net/http"
 	"time"
+
+	"go_final_project-main/pkg/db"
 )
 
 func writeJSON(w http.ResponseWriter, data interface{}, statusCode int) {

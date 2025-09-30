@@ -1,13 +1,14 @@
 package api
 
 import (
+	"go_final_project-main/pkg/cfg"
 	"net/http"
 )
 
-func Init() {
-	http.HandleFunc("/api/signin", Signin)
-	http.HandleFunc("/api/nextdate", Auth(NextDayHandler))
-	http.HandleFunc("/api/task", Auth(TaskHandler))
-	http.HandleFunc("/api/tasks", Auth(TasksHandler))
-	http.HandleFunc("/api/task/done", Auth(TaskDoneHandler))
+func Init(config *cfg.Config) {
+	http.HandleFunc("/api/signin", Signin(config))
+	http.HandleFunc("/api/nextdate", NextDayHandler)
+	http.HandleFunc("/api/task", Auth(config, TaskHandler))
+	http.HandleFunc("/api/tasks", Auth(config, TasksHandler))
+	http.HandleFunc("/api/task/done", Auth(config, TaskDoneHandler))
 }

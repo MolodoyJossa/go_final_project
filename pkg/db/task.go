@@ -4,38 +4,44 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+	"unicode"
 )
 
+func toSearch(s string) string {
+	s = strings.ToLower(s)
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
 type Task struct {
-	ID      string `json:"id"`
-	Date    string `json:"date"`
-	Title   string `json:"title"`
-	Comment string `json:"comment"`
-	Repeat  string `json:"repeat"`
+	ID           string `json:"id"`
+	Date         string `json:"date"`
+	Title        string `json:"title"`
+	Comment      string `json:"comment"`
+	Repeat       string `json:"repeat"`
+	TitleLower   string `json:"title_search"`
+	CommentLower string `json:"comment_search"`
 }
 
 func AddTask(task *Task) (int64, error) {
-	var id int64
-
-	if DB == nil {
-		return 0, fmt.Errorf("database is not initialized")
+	query := `INSERT INTO scheduler(date,title,comment,repeat,title_search,comment_search) VALUES (?,?,?,?,?,?)`
+	res, err := DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, toSearch(task.Title), toSearch(task.Comment))
+	if err != nil {
+		return 0, err
 	}
-
-	query := `INSERT INTO scheduler(date,title,comment,repeat) VALUES (?,?,?,?)`
-	res, err := DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
-	if err == nil {
-		id, err = res.LastInsertId()
-	}
+	id, err := res.LastInsertId()
 	return id, err
 }
 
 func GetTask(id string) (*Task, error) {
 	var task = &Task{}
-
-	if DB == nil {
-		return nil, fmt.Errorf("database is not initialized")
-	}
 
 	err := DB.QueryRow(
 		`SELECT id, date, title, comment, repeat
@@ -54,15 +60,11 @@ func GetTask(id string) (*Task, error) {
 }
 
 func UpdateTask(task *Task) error {
-	if DB == nil {
-		return fmt.Errorf("database is not initialized")
-	}
-
 	result, err := DB.Exec(
 		`UPDATE scheduler 
-		 SET date = ?, title = ?, comment = ?, repeat = ?
+		 SET date = ?, title = ?, comment = ?, repeat = ?, title_search = ?, comment_search = ?
 		 WHERE id = ?`,
-		task.Date, task.Title, task.Comment, task.Repeat, task.ID,
+		task.Date, task.Title, task.Comment, task.Repeat, toSearch(task.Title), toSearch(task.Comment), task.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("error updating task: %w", err)
@@ -97,10 +99,6 @@ func UpdateTaskDate(id string, nextDate string) error {
 }
 
 func DeleteTask(id string) error {
-	if DB == nil {
-		return fmt.Errorf("database is not initialized")
-	}
-
 	result, err := DB.Exec(`DELETE FROM scheduler WHERE id = ?`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete task: %w", err)
@@ -119,10 +117,6 @@ func DeleteTask(id string) error {
 }
 
 func Tasks(limit int) ([]*Task, error) {
-
-	if DB == nil {
-		return nil, fmt.Errorf("database is not initialized")
-	}
 
 	rows, err := DB.Query(
 		`SELECT id, date, title, comment, repeat
@@ -147,21 +141,19 @@ func SearchTasks(search string, limit int) ([]*Task, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to query tasks by date: %w", err)
 		}
-
 		defer rows.Close()
-
 		return rowsScan(rows)
 	} else {
+		search = "%" + toSearch(search) + "%"
 		rows, err := DB.Query(`SELECT id, date, title, comment, repeat 
 	          FROM scheduler 
-	          WHERE title LIKE ? OR comment LIKE ? 
+	          WHERE title_search LIKE ? OR comment_search LIKE ?
 	          ORDER BY date
-	          LIMIT ?`, "%"+search+"%", "%"+search+"%", limit)
+	          LIMIT ?`, search, search, limit)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query tasks by search: %v", err)
 		}
 		defer rows.Close()
-
 		return rowsScan(rows)
 	}
 }

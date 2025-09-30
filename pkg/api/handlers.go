@@ -5,8 +5,6 @@ import (
 	"go_final_project-main/pkg/db"
 	"log"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 )
 
@@ -30,13 +28,9 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func TasksHandler(w http.ResponseWriter, r *http.Request) {
+	var err error
 	search := r.FormValue("search")
 	var tasks []*db.Task
-
-	limit, err := strconv.Atoi(os.Getenv("TODO_TASKS_LIMIT"))
-	if err != nil {
-		limit = 50
-	}
 
 	if r.Method != http.MethodGet {
 		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -44,9 +38,9 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if search != "" {
-		tasks, err = db.SearchTasks(search, limit)
+		tasks, err = db.SearchTasks(search, 50)
 	} else {
-		tasks, err = db.Tasks(limit)
+		tasks, err = db.Tasks(50)
 	}
 
 	if err != nil {
