@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -11,11 +10,13 @@ import (
 )
 
 type Task struct {
-	ID      int64  `db:"id"`
-	Date    string `db:"date"`
-	Title   string `db:"title"`
-	Comment string `db:"comment"`
-	Repeat  string `db:"repeat"`
+	ID           int64  `db:"id"`
+	Date         string `db:"date"`
+	Title        string `db:"title"`
+	Comment      string `db:"comment"`
+	Repeat       string `db:"repeat"`
+	TitleLower   string `db:"title_search"`
+	CommentLower string `db:"comment_search"`
 }
 
 func count(db *sqlx.DB) (int, error) {
@@ -24,11 +25,7 @@ func count(db *sqlx.DB) (int, error) {
 }
 
 func openDB(t *testing.T) *sqlx.DB {
-	dbfile := DBFile
-	envFile := os.Getenv("TODO_DBFILE")
-	if len(envFile) > 0 {
-		dbfile = envFile
-	}
+	dbfile := "../" + DBFile
 	db, err := sqlx.Connect("sqlite", dbfile)
 	assert.NoError(t, err)
 	return db
