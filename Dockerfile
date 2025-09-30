@@ -14,7 +14,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app main.go
 
 # Final image
-FROM ubuntu:latest
+FROM alpine:latest
 
 WORKDIR /app
 
@@ -22,8 +22,8 @@ WORKDIR /app
 COPY --from=builder /app/app .
 COPY --from=builder /app/web ./web
 
-# Expose port (default 7540)
-EXPOSE 7540
+# Установка зависимостей для запуска Go-приложения
+RUN apk add --no-cache ca-certificates
 
 # Default environment variables (can be overridden at runtime)
 ENV TODO_PORT=7540
