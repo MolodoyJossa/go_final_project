@@ -2,30 +2,19 @@ package main
 
 import (
 	"go_final_project-main/pkg/api"
+	"go_final_project-main/pkg/cfg"
 	"go_final_project-main/pkg/db"
 	"go_final_project-main/pkg/server"
-	"log"
-	"os"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
 
-	api.Init()
+	config := cfg.LoadConfig()
 
-	if err := godotenv.Load(); err != nil {
-		log.Println(".env not found or not loaded")
-	}
+	api.Init(config)
 
-	dbFile := os.Getenv("TODO_DBFILE")
-	if dbFile == "" {
-		dbFile = "scheduler.db"
-	}
-
-	if err := db.Init(dbFile); err != nil {
-		log.Fatalf("DATABASE initialization error: %v", err)
-	}
+	db.Init(config.DBFile)
+	defer db.Close()
 
 	server.Start()
 }
